@@ -65,7 +65,7 @@ require (
 	github.com/otiai10/copy v1.4.2
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/rs/cors v1.7.0
-	github.com/spf13/cobra v1.1.3
+	github.com/spf13/cobra v1.4.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.7.0
@@ -107,7 +107,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/cheekybits/genny v1.0.0 // indirect
 	github.com/containerd/console v1.0.1 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
 	github.com/crackcomm/go-gitignore v0.0.0-20170627025303-887ab5e44cc3 // indirect
 	github.com/cskr/pubsub v1.0.2 // indirect
 	github.com/daaku/go.zipexe v1.0.0 // indirect
@@ -288,9 +288,8 @@ require (
 	github.com/prometheus/procfs v0.6.0 // indirect
 	github.com/raulk/clock v1.1.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
-	github.com/russross/blackfriday/v2 v2.0.1 // indirect
+	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/shirou/gopsutil v2.18.12+incompatible // indirect
-	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spacemonkeygo/spacelog v0.0.0-20180420211403-2296661a0572 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
