@@ -42,7 +42,7 @@ var Cmd = &cobra.Command{
 		err := c.PowClient.Data.WatchLogs(c.MustAuthCtx(ctx), ch, args[0], opts...)
 		c.CheckErr(err)
 
-		interrupt := make(chan os.Signal)
+		interrupt := make(chan os.Signal, 1)
 		signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 		go func() {
 			<-interrupt
