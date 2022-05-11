@@ -29,27 +29,27 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/improbable-eng/grpc-web v0.15.0
-	github.com/ipfs/go-blockservice v0.1.5
+	github.com/ipfs/go-blockservice v0.3.0
 	github.com/ipfs/go-car v0.0.4
 	github.com/ipfs/go-cid v0.1.0
-	github.com/ipfs/go-datastore v0.4.5
+	github.com/ipfs/go-datastore v0.5.0
 	github.com/ipfs/go-ds-badger v0.2.7
 	github.com/ipfs/go-ds-badger2 v0.1.1-0.20200708190120-187fc06f714e
 	github.com/ipfs/go-graphsync v0.7.0 // indirect
 	github.com/ipfs/go-ipfs v0.8.0
-	github.com/ipfs/go-ipfs-blockstore v1.0.4
-	github.com/ipfs/go-ipfs-exchange-offline v0.0.1
+	github.com/ipfs/go-ipfs-blockstore v1.2.0
+	github.com/ipfs/go-ipfs-exchange-offline v0.2.0
 	github.com/ipfs/go-ipfs-files v0.0.8
 	github.com/ipfs/go-ipfs-http-client v0.1.0
 	github.com/ipfs/go-ipld-cbor v0.0.5
-	github.com/ipfs/go-ipld-format v0.2.0
+	github.com/ipfs/go-ipld-format v0.3.0
 	github.com/ipfs/go-log/v2 v2.3.0
 	github.com/ipfs/go-merkledag v0.3.2
 	github.com/ipfs/go-unixfs v0.2.6
 	github.com/ipfs/interface-go-ipfs-core v0.4.0
 	github.com/ipld/go-car v0.2.1-0.20210322190947-cffd36d39d90 // indirect
 	github.com/jessevdk/go-assets v0.0.0-20160921144138-4f4301a06e15
-	github.com/libp2p/go-libp2p v0.14.2
+	github.com/libp2p/go-libp2p v0.14.3
 	github.com/libp2p/go-libp2p-core v0.8.6
 	github.com/libp2p/go-libp2p-kad-dht v0.11.1
 	github.com/logrusorgru/aurora v0.0.0-20200102142835-e9ef32dff381
@@ -97,7 +97,7 @@ require (
 	github.com/VividCortex/ewma v1.1.1 // indirect
 	github.com/akavel/rsrc v0.8.0 // indirect
 	github.com/aws/aws-sdk-go v1.32.11 // indirect
-	github.com/benbjohnson/clock v1.0.3 // indirect
+	github.com/benbjohnson/clock v1.1.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bren2010/proquint v0.0.0-20160323162903-38337c27106d // indirect
 	github.com/btcsuite/btcd v0.21.0-beta // indirect
@@ -163,7 +163,7 @@ require (
 	github.com/huin/goupnp v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/ipfs/bbloom v0.0.4 // indirect
-	github.com/ipfs/go-bitswap v0.3.4 // indirect
+	github.com/ipfs/go-bitswap v0.6.0 // indirect
 	github.com/ipfs/go-block-format v0.0.3 // indirect
 	github.com/ipfs/go-cidutil v0.0.2 // indirect
 	github.com/ipfs/go-filestore v1.0.0 // indirect
@@ -171,20 +171,20 @@ require (
 	github.com/ipfs/go-ipfs-cmds v0.6.0 // indirect
 	github.com/ipfs/go-ipfs-config v0.12.0 // indirect
 	github.com/ipfs/go-ipfs-delay v0.0.1 // indirect
-	github.com/ipfs/go-ipfs-ds-help v1.0.0 // indirect
-	github.com/ipfs/go-ipfs-exchange-interface v0.0.1 // indirect
+	github.com/ipfs/go-ipfs-ds-help v1.1.0 // indirect
+	github.com/ipfs/go-ipfs-exchange-interface v0.1.0 // indirect
 	github.com/ipfs/go-ipfs-pinner v0.1.1 // indirect
 	github.com/ipfs/go-ipfs-posinfo v0.0.1 // indirect
 	github.com/ipfs/go-ipfs-pq v0.0.2 // indirect
 	github.com/ipfs/go-ipfs-provider v0.4.3 // indirect
-	github.com/ipfs/go-ipfs-routing v0.1.0 // indirect
+	github.com/ipfs/go-ipfs-routing v0.2.1 // indirect
 	github.com/ipfs/go-ipfs-util v0.0.2 // indirect
 	github.com/ipfs/go-ipns v0.0.2 // indirect
 	github.com/ipfs/go-log v1.0.5 // indirect
 	github.com/ipfs/go-metrics-interface v0.0.1 // indirect
 	github.com/ipfs/go-mfs v0.1.2 // indirect
 	github.com/ipfs/go-path v0.0.9 // indirect
-	github.com/ipfs/go-peertaskqueue v0.2.0 // indirect
+	github.com/ipfs/go-peertaskqueue v0.7.0 // indirect
 	github.com/ipfs/go-verifcid v0.0.1 // indirect
 	github.com/ipld/go-ipld-prime v0.7.0 // indirect
 	github.com/ipld/go-ipld-prime-proto v0.1.1 // indirect
