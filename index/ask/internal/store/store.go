@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -30,7 +31,7 @@ func (s *Store) Save(idx ask.Index) error {
 	if err != nil {
 		return fmt.Errorf("marshaling new index: %s", err)
 	}
-	if err = s.ds.Put(dsKey, buf); err != nil {
+	if err = s.ds.Put(context.Background(), dsKey, buf); err != nil {
 		return fmt.Errorf("saving to datastore: %s", err)
 	}
 	return nil
@@ -39,7 +40,7 @@ func (s *Store) Save(idx ask.Index) error {
 // Get returns the last saved ask index. If no ask index was persisted,
 // it returns an valid empty index.
 func (s *Store) Get() (ask.Index, error) {
-	buf, err := s.ds.Get(dsKey)
+	buf, err := s.ds.Get(context.Background(), dsKey)
 	if err != nil {
 		if err == datastore.ErrNotFound {
 			return ask.Index{Storage: make(map[string]ask.StorageAsk)}, nil

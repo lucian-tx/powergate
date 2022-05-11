@@ -16,7 +16,6 @@ import (
 	"github.com/textileio/powergate/v2/index/ask/internal/store"
 	"github.com/textileio/powergate/v2/lotus"
 	"github.com/textileio/powergate/v2/signaler"
-	"go.opentelemetry.io/otel/metric"
 )
 
 var (
@@ -41,9 +40,8 @@ type Runner struct {
 	closed   bool
 
 	// Metrics
-	refreshDuration metric.Int64ValueRecorder
-	metricLock      sync.Mutex
-	progress        float64
+	metricLock sync.Mutex
+	progress   float64
 }
 
 // Config contains parameters for index updating.
@@ -77,7 +75,6 @@ func New(ds datastore.TxnDatastore, clientBuilder lotus.ClientBuilder, config Co
 		cancel:   cancel,
 		finished: make(chan struct{}),
 	}
-	ai.initMetrics()
 
 	go ai.start(config.RefreshOnStart, config.Disable)
 
@@ -182,7 +179,6 @@ func (ai *Runner) start(refreshOnStart bool, disable bool) {
 // update triggers a full-scan generates and saves a new fresh index and builds
 // views for better querying.
 func (ai *Runner) update() error {
-	start := time.Now()
 	log.Info("updating ask index...")
 	defer log.Info("ask index updated")
 
@@ -210,8 +206,6 @@ func (ai *Runner) update() error {
 		return fmt.Errorf("persisting ask index: %s", err)
 	}
 	ai.signaler.Signal()
-
-	ai.refreshDuration.Record(context.Background(), time.Since(start).Milliseconds())
 
 	return nil
 }
@@ -297,13 +291,13 @@ func getMinerStorageAsk(ctx context.Context, api *api.FullNodeStruct, addr addre
 		return ask.StorageAsk{}, false, nil
 	}
 	return ask.StorageAsk{
-		Miner:         sask.Miner.String(),
-		Price:         sask.Price.Uint64(),
-		VerifiedPrice: sask.VerifiedPrice.Uint64(),
-		MinPieceSize:  uint64(sask.MinPieceSize),
-		MaxPieceSize:  uint64(sask.MaxPieceSize),
-		Timestamp:     int64(sask.Timestamp),
-		Expiry:        int64(sask.Expiry),
+		Miner:         sask.Response.Miner.String(),
+		Price:         sask.Response.Price.Uint64(),
+		VerifiedPrice: sask.Response.VerifiedPrice.Uint64(),
+		MinPieceSize:  uint64(sask.Response.MinPieceSize),
+		MaxPieceSize:  uint64(sask.Response.MaxPieceSize),
+		Timestamp:     int64(sask.Response.Timestamp),
+		Expiry:        int64(sask.Response.Expiry),
 	}, true, nil
 }
 

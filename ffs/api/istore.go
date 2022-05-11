@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"sync"
@@ -37,7 +38,7 @@ func (s *instanceStore) putInstanceConfig(c InstanceConfig) error {
 	if err != nil {
 		return fmt.Errorf("marshaling instance config to datastore: %s", err)
 	}
-	if err := s.ds.Put(dsInstanceConfig, buf); err != nil {
+	if err := s.ds.Put(context.Background(), dsInstanceConfig, buf); err != nil {
 		return fmt.Errorf("saving to datastore: %s", err)
 	}
 	return nil
@@ -46,7 +47,7 @@ func (s *instanceStore) putInstanceConfig(c InstanceConfig) error {
 // getInstanceConfig returns general instance configurations, such as default wallet address,
 // default storage config, etc.
 func (s *instanceStore) getInstanceConfig() (InstanceConfig, error) {
-	buf, err := s.ds.Get(dsInstanceConfig)
+	buf, err := s.ds.Get(context.Background(), dsInstanceConfig)
 	if err != nil {
 		if err == datastore.ErrNotFound {
 			return InstanceConfig{}, ErrNotFound
@@ -68,7 +69,7 @@ func (s *instanceStore) putStorageConfig(c cid.Cid, sc ffs.StorageConfig) error 
 	if err != nil {
 		return fmt.Errorf("marshaling cid config to datastore: %s", err)
 	}
-	if err := s.ds.Put(makeStorageConfigKey(c), buf); err != nil {
+	if err := s.ds.Put(context.Background(), makeStorageConfigKey(c), buf); err != nil {
 		return fmt.Errorf("saving cid config to datastore: %s", err)
 	}
 	return nil
@@ -78,7 +79,7 @@ func (s *instanceStore) removeStorageConfig(c cid.Cid) error {
 	if !c.Defined() {
 		return fmt.Errorf("cid can't be undefined")
 	}
-	if err := s.ds.Delete(makeStorageConfigKey(c)); err != nil {
+	if err := s.ds.Delete(context.Background(), makeStorageConfigKey(c)); err != nil {
 		return fmt.Errorf("removing from datastore: %s", err)
 	}
 	return nil
@@ -97,7 +98,7 @@ func (s *instanceStore) getStorageConfigs(cids ...cid.Cid) (map[cid.Cid]ffs.Stor
 
 	if len(cids) == 1 {
 		// just getting a single value, do an explicit query for it
-		buf, err := s.ds.Get(makeStorageConfigKey(cids[0]))
+		buf, err := s.ds.Get(context.Background(), makeStorageConfigKey(cids[0]))
 		if err != nil {
 			if err == datastore.ErrNotFound {
 				return nil, ErrNotFound
@@ -110,7 +111,7 @@ func (s *instanceStore) getStorageConfigs(cids ...cid.Cid) (map[cid.Cid]ffs.Stor
 		q := query.Query{
 			Prefix: dsBaseCidStorageConfig.String(),
 		}
-		res, err := s.ds.Query(q)
+		res, err := s.ds.Query(context.Background(), q)
 		if err != nil {
 			return nil, err
 		}
@@ -188,14 +189,14 @@ func (s *instanceStore) putRetrievalRequest(rID ffs.RetrievalID, pyCid, piCid ci
 	if err != nil {
 		return retrievalRequest{}, fmt.Errorf("marshaling retrieval request for datastore: %s", err)
 	}
-	if err := s.ds.Put(makeRetrievalRequestKey(rID), buf); err != nil {
+	if err := s.ds.Put(context.Background(), makeRetrievalRequestKey(rID), buf); err != nil {
 		return retrievalRequest{}, fmt.Errorf("saving cid config to datastore: %s", err)
 	}
 	return rr, nil
 }
 
 func (s *instanceStore) getRetrievalRequest(rid ffs.RetrievalID) (retrievalRequest, error) {
-	buf, err := s.ds.Get(makeRetrievalRequestKey(rid))
+	buf, err := s.ds.Get(context.Background(), makeRetrievalRequestKey(rid))
 	if err != nil {
 		if err == datastore.ErrNotFound {
 			return retrievalRequest{}, ErrNotFound

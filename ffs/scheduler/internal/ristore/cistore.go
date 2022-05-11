@@ -1,6 +1,7 @@
 package ristore
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -29,7 +30,7 @@ func New(ds datastore.Datastore) *Store {
 // Get gets information about an executed retrieval.
 func (s *Store) Get(rid ffs.RetrievalID) (ffs.RetrievalInfo, error) {
 	var ri ffs.RetrievalInfo
-	buf, err := s.ds.Get(makeKey(rid))
+	buf, err := s.ds.Get(context.Background(), makeKey(rid))
 	if err == datastore.ErrNotFound {
 		return ri, ErrNotFound
 	}
@@ -51,7 +52,7 @@ func (s *Store) Put(ri ffs.RetrievalInfo) error {
 	if err != nil {
 		return fmt.Errorf("marshaling retrieval info for datastore: %s", err)
 	}
-	if err := s.ds.Put(makeKey(ri.ID), buf); err != nil {
+	if err := s.ds.Put(context.Background(), makeKey(ri.ID), buf); err != nil {
 		return fmt.Errorf("putting retrieval info in datastore: %s", err)
 	}
 	return nil

@@ -16,7 +16,6 @@ import (
 	"github.com/textileio/powergate/v2/iplocation"
 	"github.com/textileio/powergate/v2/lotus"
 	"github.com/textileio/powergate/v2/signaler"
-	"go.opentelemetry.io/otel/metric"
 )
 
 var (
@@ -48,10 +47,9 @@ type Index struct {
 	closed bool
 
 	// Meters
-	metricLock           sync.RWMutex
-	onchainProgress      float64
-	metaProgress         float64
-	meterRefreshDuration metric.Int64ValueRecorder
+	metricLock      sync.RWMutex
+	onchainProgress float64
+	metaProgress    float64
 }
 
 // Config provides configuration parametrs to the miner index.
@@ -88,8 +86,6 @@ func New(ds datastore.Datastore, clientBuilder lotus.ClientBuilder, h P2PHost, l
 		ctx:    ctx,
 		cancel: cancel,
 	}
-
-	mi.initMetrics()
 
 	if !conf.Disable {
 		mi.startMinerWorker()

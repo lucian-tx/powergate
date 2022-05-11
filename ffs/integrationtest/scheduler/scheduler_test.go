@@ -96,7 +96,7 @@ func TestResumeScheduler(t *testing.T) {
 	require.NoError(t, err)
 
 	time.Sleep(time.Second * 3)
-	ds2, err := ds.Clone()
+	ds2, err := ds.Clone(context.Background())
 	require.NoError(t, err)
 	closeManager()
 

@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -46,7 +47,7 @@ func (r *Auth) Generate(iid ffs.APIID) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("marshaling new auth token for instance %s: %s", iid, err)
 	}
-	if err := r.ds.Put(ds.NewKey(e.Token), buf); err != nil {
+	if err := r.ds.Put(context.Background(), ds.NewKey(e.Token), buf); err != nil {
 		return "", fmt.Errorf("saving generated token from %s to datastore: %s", iid, err)
 	}
 	return e.Token, nil
@@ -58,7 +59,7 @@ func (r *Auth) Get(token string) (ffs.APIID, error) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 
-	buf, err := r.ds.Get(ds.NewKey(token))
+	buf, err := r.ds.Get(context.Background(), ds.NewKey(token))
 	if err != nil && err == ds.ErrNotFound {
 		return ffs.EmptyInstanceID, ErrNotFound
 	}
@@ -76,14 +77,14 @@ func (r *Auth) Get(token string) (ffs.APIID, error) {
 func (r *Auth) RegenerateAuthToken(token string) (string, error) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
-
-	txn, err := r.ds.NewTransaction(false)
+	ctx := context.Background()
+	txn, err := r.ds.NewTransaction(ctx, false)
 	if err != nil {
 		return "", fmt.Errorf("creating transaction: %s", err)
 	}
-	defer txn.Discard()
+	defer txn.Discard(ctx)
 
-	buf, err := txn.Get(ds.NewKey(token))
+	buf, err := txn.Get(ctx, ds.NewKey(token))
 	if err != nil && err == ds.ErrNotFound {
 		return "", ErrNotFound
 	}
@@ -96,7 +97,7 @@ func (r *Auth) RegenerateAuthToken(token string) (string, error) {
 	}
 
 	// Delete old token.
-	if err := txn.Delete(ds.NewKey(token)); err != nil {
+	if err := txn.Delete(ctx, ds.NewKey(token)); err != nil {
 		return "", fmt.Errorf("deleting old token: %s", err)
 	}
 
@@ -106,11 +107,11 @@ func (r *Auth) RegenerateAuthToken(token string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("marshaling new regenerated token: %s", err)
 	}
-	if err := txn.Put(ds.NewKey(e.Token), buf); err != nil {
+	if err := txn.Put(ctx, ds.NewKey(e.Token), buf); err != nil {
 		return "", fmt.Errorf("saving regenerated token: %s", err)
 	}
 
-	if err := txn.Commit(); err != nil {
+	if err := txn.Commit(ctx); err != nil {
 		return "", fmt.Errorf("committing transaction: %s", err)
 	}
 
@@ -122,7 +123,7 @@ func (r *Auth) List() ([]ffs.AuthEntry, error) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 	q := query.Query{Prefix: ""}
-	res, err := r.ds.Query(q)
+	res, err := r.ds.Query(context.Background(), q)
 	if err != nil {
 		return nil, fmt.Errorf("executing query in datastore: %s", err)
 	}

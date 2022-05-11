@@ -51,7 +51,6 @@ func (mi *Index) startMetaWorker() {
 }
 
 func (mi *Index) tickUpdateMetaIndex() error {
-	start := time.Now()
 	log.Info("updating meta index...")
 	defer log.Info("meta index updated")
 
@@ -74,8 +73,6 @@ func (mi *Index) tickUpdateMetaIndex() error {
 	mi.lock.Unlock()
 
 	mi.signaler.Signal()
-
-	mi.meterRefreshDuration.Record(context.Background(), time.Since(start).Milliseconds(), metaSubindex)
 
 	return nil
 }

@@ -13,7 +13,6 @@ import (
 )
 
 func (mi *Index) updateOnChainIndex(ctx context.Context) error {
-	start := time.Now()
 	log.Info("updating on-chain index...")
 	defer log.Info("on-chain index updated")
 
@@ -50,7 +49,6 @@ func (mi *Index) updateOnChainIndex(ctx context.Context) error {
 		return fmt.Errorf("saving on-chain index to store: %s", err)
 	}
 	mi.signaler.Signal()
-	mi.meterRefreshDuration.Record(ctx, time.Since(start).Milliseconds(), onchainSubindex)
 
 	return nil
 }

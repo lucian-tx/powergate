@@ -177,7 +177,7 @@ func getMinerQueryAsk(c *api.FullNodeStruct, addrStr string) (*storagemarket.Sto
 			chAsk <- chAskRes{Error: err.Error()}
 			return
 		}
-		chAsk <- chAskRes{Ask: sask}
+		chAsk <- chAskRes{Ask: sask.Response}
 	}()
 
 	select {

@@ -18,7 +18,6 @@ import (
 	logging "github.com/ipfs/go-log/v2"
 	"github.com/textileio/powergate/v2/deals"
 	"github.com/textileio/powergate/v2/util"
-	"go.opentelemetry.io/otel/metric"
 )
 
 var (
@@ -40,9 +39,6 @@ var (
 type Store struct {
 	ds   datastore.TxnDatastore
 	lock sync.Mutex
-
-	metricFinalTotal  metric.Int64Counter
-	metricVolumeBytes metric.Int64Counter
 }
 
 // New returns a new *Store.
@@ -50,7 +46,6 @@ func New(ds datastore.TxnDatastore) *Store {
 	s := &Store{
 		ds: ds,
 	}
-	s.initMetrics()
 
 	return s
 }
@@ -60,11 +55,11 @@ func (s *Store) PutStorageDeal(dr deals.StorageDealRecord) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	txn, err := s.ds.NewTransaction(false)
+	txn, err := s.ds.NewTransaction(context.Background(), false)
 	if err != nil {
 		return fmt.Errorf("creating transaction: %s", err)
 	}
-	defer txn.Discard()
+	defer txn.Discard(context.Background())
 
 	if dr.Pending && dr.ErrMsg != "" {
 		return fmt.Errorf("pending storage records can't have error messages")
@@ -73,7 +68,7 @@ func (s *Store) PutStorageDeal(dr deals.StorageDealRecord) error {
 	// If not pending, delete any saved record in the 'pending' keyspace.
 	// If not exists, `Delete()` is a noop.
 	if !dr.Pending {
-		if err := txn.Delete(makePendingDealKey(dr.DealInfo.ProposalCid)); err != nil {
+		if err := txn.Delete(context.Background(), makePendingDealKey(dr.DealInfo.ProposalCid)); err != nil {
 			return fmt.Errorf("delete pending deal storage record: %s", err)
 		}
 	}
@@ -88,27 +83,19 @@ func (s *Store) PutStorageDeal(dr deals.StorageDealRecord) error {
 	if dr.Pending {
 		key = makePendingDealKey(dr.DealInfo.ProposalCid)
 	} else {
-		ctx := context.Background()
-		if dr.ErrMsg == "" {
-			s.metricVolumeBytes.Add(ctx, int64(dr.DealInfo.Size), attrTypeStorage, attrSuccess)
-			s.metricFinalTotal.Add(ctx, 1, attrTypeStorage, attrSuccess)
-		} else {
-			s.metricVolumeBytes.Add(ctx, int64(dr.DealInfo.Size), attrTypeStorage, attrFailed)
-			s.metricFinalTotal.Add(ctx, 1, attrTypeStorage, attrFailed)
-		}
 		key = makeFinalDealKey(dr.DealInfo.ProposalCid)
 	}
 
-	if err := txn.Put(key, buf); err != nil {
+	if err := txn.Put(context.Background(), key, buf); err != nil {
 		return fmt.Errorf("put storage deal record: %s", err)
 	}
 
 	updatedAtIndexKey := makeStorageUpdatedAtIndexKey(dr.UpdatedAt)
-	if err := txn.Put(updatedAtIndexKey, key.Bytes()); err != nil {
+	if err := txn.Put(context.Background(), updatedAtIndexKey, key.Bytes()); err != nil {
 		return fmt.Errorf("saving updated-at index: %s", err)
 	}
 
-	if err := txn.Commit(); err != nil {
+	if err := txn.Commit(context.Background()); err != nil {
 		return fmt.Errorf("committing transaction: %s", err)
 	}
 
@@ -121,7 +108,7 @@ func (s *Store) GetPendingStorageDeals() ([]deals.StorageDealRecord, error) {
 	defer s.lock.Unlock()
 
 	q := query.Query{Prefix: dsBaseStoragePending.String()}
-	res, err := s.ds.Query(q)
+	res, err := s.ds.Query(context.Background(), q)
 	if err != nil {
 		return nil, fmt.Errorf("executing query: %s", err)
 	}
@@ -151,7 +138,7 @@ func (s *Store) GetFinalStorageDeals() ([]deals.StorageDealRecord, error) {
 	defer s.lock.Unlock()
 
 	q := query.Query{Prefix: dsBaseStorageFinal.String()}
-	res, err := s.ds.Query(q)
+	res, err := s.ds.Query(context.Background(), q)
 	if err != nil {
 		return nil, fmt.Errorf("executing query: %s", err)
 	}
@@ -181,11 +168,11 @@ func (s *Store) PutRetrieval(rr deals.RetrievalDealRecord) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	txn, err := s.ds.NewTransaction(false)
+	txn, err := s.ds.NewTransaction(context.Background(), false)
 	if err != nil {
 		return fmt.Errorf("creating transaction: %s", err)
 	}
-	defer txn.Discard()
+	defer txn.Discard(context.Background())
 
 	rr.ID = retrievalID(rr)
 	rr.UpdatedAt = time.Now().UnixNano()
@@ -194,22 +181,18 @@ func (s *Store) PutRetrieval(rr deals.RetrievalDealRecord) error {
 		return fmt.Errorf("marshaling RetrievalRecord: %s", err)
 	}
 	key := makeRetrievalKey(rr)
-	if err := txn.Put(key, buf); err != nil {
+	if err := txn.Put(context.Background(), key, buf); err != nil {
 		return fmt.Errorf("put RetrievalRecord: %s", err)
 	}
 
 	updatedAtIndexKey := makeRetrievalUpdatedAtIndexKey(rr.UpdatedAt)
-	if err := txn.Put(updatedAtIndexKey, key.Bytes()); err != nil {
+	if err := txn.Put(context.Background(), updatedAtIndexKey, key.Bytes()); err != nil {
 		return fmt.Errorf("saving updated-at index: %s", err)
 	}
 
-	if err := txn.Commit(); err != nil {
+	if err := txn.Commit(context.Background()); err != nil {
 		return fmt.Errorf("committing transaction: %s", err)
 	}
-
-	ctx := context.Background()
-	s.metricVolumeBytes.Add(ctx, int64(rr.BytesReceived), attrTypeStorage, attrFailed)
-	s.metricFinalTotal.Add(ctx, 1, attrTypeRetrieval, attrSuccess)
 
 	return nil
 }
@@ -220,7 +203,7 @@ func (s *Store) GetRetrievals() ([]deals.RetrievalDealRecord, error) {
 	defer s.lock.Unlock()
 
 	q := query.Query{Prefix: dsBaseRetrieval.String()}
-	res, err := s.ds.Query(q)
+	res, err := s.ds.Query(context.Background(), q)
 	if err != nil {
 		return nil, fmt.Errorf("executing query: %s", err)
 	}
@@ -250,7 +233,7 @@ func (s *Store) GetUpdatedStorageDealRecordsSince(since time.Time, limit int) ([
 	q := query.Query{
 		Prefix: dsStorageUpdatedAtIdx.String(),
 	}
-	res, err := s.ds.Query(q)
+	res, err := s.ds.Query(context.Background(), q)
 	if err != nil {
 		return nil, fmt.Errorf("executing query: %s", err)
 	}
@@ -277,7 +260,7 @@ func (s *Store) GetUpdatedStorageDealRecordsSince(since time.Time, limit int) ([
 		}
 
 		recordKey := datastore.RawKey(string(r.Value))
-		buf, err := s.ds.Get(recordKey)
+		buf, err := s.ds.Get(context.Background(), recordKey)
 		if err == datastore.ErrNotFound && strings.HasPrefix(string(r.Value), dsBaseStoragePending.String()) {
 			continue
 		}
@@ -318,7 +301,7 @@ func (s *Store) GetUpdatedRetrievalRecordsSince(since time.Time, limit int) ([]d
 	q := query.Query{
 		Prefix: dsRetrievalUpdatedAtIdx.String(),
 	}
-	res, err := s.ds.Query(q)
+	res, err := s.ds.Query(context.Background(), q)
 	if err != nil {
 		return nil, fmt.Errorf("executing query: %s", err)
 	}
@@ -345,7 +328,7 @@ func (s *Store) GetUpdatedRetrievalRecordsSince(since time.Time, limit int) ([]d
 		}
 
 		recordKey := datastore.RawKey(string(r.Value))
-		buf, err := s.ds.Get(recordKey)
+		buf, err := s.ds.Get(context.Background(), recordKey)
 		if err != nil {
 			return nil, fmt.Errorf("get updated retrieval deal record from store: %s", err)
 		}

@@ -18,7 +18,6 @@ import (
 	logger "github.com/ipfs/go-log/v2"
 	"github.com/textileio/powergate/v2/lotus"
 	"github.com/textileio/powergate/v2/wallet"
-	"go.opentelemetry.io/otel/metric"
 )
 
 const (
@@ -37,9 +36,6 @@ type Module struct {
 	iAmount       *big.Int
 	masterAddr    address.Address
 	networkName   string
-
-	metricCreated  metric.Int64Counter
-	metricTransfer metric.Int64ValueRecorder
 }
 
 // New creates a new wallet module.
@@ -70,7 +66,6 @@ func New(clientBuilder lotus.ClientBuilder, maddr address.Address, iam big.Int, 
 			masterAddr:    maddr,
 		}
 	}
-	m.initMetrics()
 
 	return m, nil
 }
@@ -102,7 +97,6 @@ func (m *Module) NewAddress(ctx context.Context, typ string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	m.metricCreated.Add(ctx, 1)
 
 	if m.masterAddr != address.Undef {
 		balance, err := client.WalletBalance(ctx, m.masterAddr)
@@ -131,8 +125,6 @@ func (m *Module) NewAddress(ctx context.Context, typ string) (string, error) {
 				return
 			}
 
-			nanoAmount := big.NewInt(0).Div(m.iAmount, big.NewInt(1_000_000_000))
-			m.metricTransfer.Record(ctx, nanoAmount.Int64(), tagAutofund.Bool(true))
 			log.Infof("%s funding transaction message: %s", addr, smsg.Message.Cid())
 		}()
 	}
@@ -242,8 +234,6 @@ func (m *Module) SendFil(ctx context.Context, from string, to string, amount *bi
 	if err != nil {
 		return cid.Cid{}, err
 	}
-	nanoAmount := big.NewInt(0).Div(amount, big.NewInt(1_000_000_000))
-	m.metricTransfer.Record(ctx, nanoAmount.Int64(), tagAutofund.Bool(true))
 
 	return sm.Message.Cid(), err
 }

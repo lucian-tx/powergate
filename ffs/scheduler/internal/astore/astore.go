@@ -1,6 +1,7 @@
 package astore
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -55,7 +56,7 @@ func New(ds datastore.Datastore) *Store {
 // GetStorageAction gets an action for a JobID. If doesn't exist, returns ErrNotFound.
 func (s *Store) GetStorageAction(jid ffs.JobID) (StorageAction, error) {
 	var a StorageAction
-	buf, err := s.ds.Get(makeStorageActionKey(jid))
+	buf, err := s.ds.Get(context.Background(), makeStorageActionKey(jid))
 	if err == datastore.ErrNotFound {
 		return a, ErrNotFound
 	}
@@ -74,7 +75,7 @@ func (s *Store) PutStorageAction(jid ffs.JobID, a StorageAction) error {
 	if err != nil {
 		return fmt.Errorf("json marshaling: %s", err)
 	}
-	if err := s.ds.Put(makeStorageActionKey(jid), buf); err != nil {
+	if err := s.ds.Put(context.Background(), makeStorageActionKey(jid), buf); err != nil {
 		return fmt.Errorf("saving in datastore: %s", err)
 	}
 	return nil
@@ -84,7 +85,7 @@ func (s *Store) PutStorageAction(jid ffs.JobID, a StorageAction) error {
 // RetrievalJob id.
 func (s *Store) GetRetrievalAction(jid ffs.JobID) (RetrievalAction, error) {
 	var a RetrievalAction
-	buf, err := s.ds.Get(makeRetrievalActionKey(jid))
+	buf, err := s.ds.Get(context.Background(), makeRetrievalActionKey(jid))
 	if err == datastore.ErrNotFound {
 		return a, ErrNotFound
 	}
@@ -103,7 +104,7 @@ func (s *Store) PutRetrievalAction(jid ffs.JobID, a RetrievalAction) error {
 	if err != nil {
 		return fmt.Errorf("json marshaling: %s", err)
 	}
-	if err := s.ds.Put(makeRetrievalActionKey(jid), buf); err != nil {
+	if err := s.ds.Put(context.Background(), makeRetrievalActionKey(jid), buf); err != nil {
 		return fmt.Errorf("saving in datastore: %s", err)
 	}
 	return nil

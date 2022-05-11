@@ -1,6 +1,7 @@
 package source
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -35,14 +36,14 @@ func NewStore(ds datastore.TxnDatastore) *Store {
 
 // Add adds a new Source to the store.
 func (ss *Store) Add(s Source) error {
-	txn, err := ss.ds.NewTransaction(false)
+	txn, err := ss.ds.NewTransaction(context.Background(), false)
 	if err != nil {
 		return err
 	}
-	defer txn.Discard()
+	defer txn.Discard(context.Background())
 
 	k := genKey(s.ID)
-	ok, err := txn.Has(k)
+	ok, err := txn.Has(context.Background(), k)
 	if err != nil {
 		return err
 	}
@@ -54,12 +55,12 @@ func (ss *Store) Add(s Source) error {
 
 // Update updates a Source.
 func (ss *Store) Update(s Source) error {
-	txn, err := ss.ds.NewTransaction(false)
+	txn, err := ss.ds.NewTransaction(context.Background(), false)
 	if err != nil {
 		return err
 	}
 	k := genKey(s.ID)
-	ok, err := txn.Has(k)
+	ok, err := txn.Has(context.Background(), k)
 	if err != nil {
 		return err
 	}
@@ -71,13 +72,13 @@ func (ss *Store) Update(s Source) error {
 
 // GetAll returns all Sources.
 func (ss *Store) GetAll() ([]Source, error) {
-	txn, err := ss.ds.NewTransaction(true)
+	txn, err := ss.ds.NewTransaction(context.Background(), true)
 	if err != nil {
 		return nil, err
 	}
-	defer txn.Discard()
+	defer txn.Discard(context.Background())
 	q := query.Query{Prefix: baseKey.String()}
-	res, err := txn.Query(q)
+	res, err := txn.Query(context.Background(), q)
 	if err != nil {
 		return nil, err
 	}
@@ -105,10 +106,10 @@ func (ss *Store) put(txn datastore.Txn, s Source) error {
 	if err != nil {
 		return err
 	}
-	if err := txn.Put(genKey(s.ID), b); err != nil {
+	if err := txn.Put(context.Background(), genKey(s.ID), b); err != nil {
 		return err
 	}
-	return txn.Commit()
+	return txn.Commit(context.Background())
 }
 
 func genKey(id string) datastore.Key {

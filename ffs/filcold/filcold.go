@@ -23,7 +23,6 @@ import (
 	"github.com/textileio/powergate/v2/lotus"
 	"github.com/textileio/powergate/v2/util"
 	"github.com/textileio/powergate/v2/wallet"
-	"go.opentelemetry.io/otel/metric"
 )
 
 const (
@@ -47,9 +46,6 @@ type FilCold struct {
 	minPieceSize         uint64
 	retrNextEventTimeout time.Duration
 	semaphDealPrep       chan struct{}
-
-	// Metrics
-	metricPreprocessingTotal metric.Int64UpDownCounter
 }
 
 var _ ffs.ColdStorage = (*FilCold)(nil)
@@ -73,7 +69,6 @@ func New(ms ffs.MinerSelector, dm *dealsModule.Module, wm wallet.Module, ipfs if
 		retrNextEventTimeout: retrievalNextEventTimeout,
 		semaphDealPrep:       make(chan struct{}, maxParallelDealPreparing),
 	}
-	fc.initMetrics()
 
 	return fc
 }
@@ -124,17 +119,12 @@ Loop:
 
 func (fc *FilCold) calculateDealPiece(ctx context.Context, c cid.Cid) (int64, abi.PaddedPieceSize, cid.Cid, error) {
 	fc.l.Log(ctx, "Entering deal preprocessing queue...")
-	fc.metricPreprocessingTotal.Add(ctx, 1, metricTagPreprocessingWaiting)
 	select {
 	case fc.semaphDealPrep <- struct{}{}:
 	case <-ctx.Done():
-		fc.metricPreprocessingTotal.Add(ctx, -1, metricTagPreprocessingWaiting)
 		return 0, 0, cid.Undef, fmt.Errorf("canceled by context")
 	}
-	fc.metricPreprocessingTotal.Add(ctx, -1, metricTagPreprocessingWaiting)
-	fc.metricPreprocessingTotal.Add(ctx, 1, metricTagPreprocessingInProgress)
 	defer func() {
-		fc.metricPreprocessingTotal.Add(ctx, -1, metricTagPreprocessingInProgress)
 		<-fc.semaphDealPrep
 	}()
 	for {

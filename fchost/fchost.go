@@ -30,8 +30,8 @@ type FilecoinHost struct {
 // New returns a new FilecoinHost.
 func New(network string, bootstrap bool) (*FilecoinHost, error) {
 	ctx := context.Background()
-	opts := getDefaultOpts()
-	h, err := libp2p.New(ctx, opts...)
+	//opts := getDefaultOpts()
+	h, err := libp2p.New(libp2p.Defaults)
 	if err != nil {
 		return nil, err
 	}

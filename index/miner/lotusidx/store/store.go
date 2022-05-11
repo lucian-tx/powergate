@@ -41,7 +41,7 @@ func (s *Store) SaveMetadata(index miner.MetaIndex) error {
 		if err != nil {
 			return fmt.Errorf("marshaling metadata for miner %s: %s", addr, err)
 		}
-		if err := s.ds.Put(key, buf); err != nil {
+		if err := s.ds.Put(context.Background(), key, buf); err != nil {
 			return fmt.Errorf("saving metadata in store: %s", err)
 		}
 	}
@@ -51,17 +51,17 @@ func (s *Store) SaveMetadata(index miner.MetaIndex) error {
 // SaveOnChain creates/updates on-chain information of miners.
 func (s *Store) SaveOnChain(ctx context.Context, index miner.ChainIndex) error {
 	var i int64
-	b, err := s.ds.Batch()
+	b, err := s.ds.Batch(ctx)
 	if err != nil {
 		return fmt.Errorf("creating batch: %s", err)
 	}
 	for addr, onchain := range index.Miners {
 		i++
 		if i%1000 == 0 {
-			if err := b.Commit(); err != nil {
+			if err := b.Commit(ctx); err != nil {
 				return fmt.Errorf("committing batch: %s", err)
 			}
-			b, err = s.ds.Batch()
+			b, err = s.ds.Batch(ctx)
 			if err != nil {
 				return fmt.Errorf("creating batch: %s", err)
 			}
@@ -74,17 +74,17 @@ func (s *Store) SaveOnChain(ctx context.Context, index miner.ChainIndex) error {
 		if err != nil {
 			return fmt.Errorf("marshaling onchain for miner %s: %s", addr, err)
 		}
-		if err := b.Put(key, buf); err != nil {
+		if err := b.Put(ctx, key, buf); err != nil {
 			return fmt.Errorf("saving onchain in store: %s", err)
 		}
 	}
-	if err := b.Commit(); err != nil {
+	if err := b.Commit(ctx); err != nil {
 		return fmt.Errorf("committing batch: %s", err)
 	}
 
 	buf := make([]byte, 8)
 	binary.LittleEndian.PutUint64(buf, uint64(index.LastUpdated))
-	if err := s.ds.Put(dsOnChainHeight, buf); err != nil {
+	if err := s.ds.Put(ctx, dsOnChainHeight, buf); err != nil {
 		return fmt.Errorf("saving metadata in store: %s", err)
 	}
 
@@ -110,7 +110,7 @@ func (s *Store) GetIndex() (miner.IndexSnapshot, error) {
 
 func (s *Store) getMetaIndex() (miner.MetaIndex, error) {
 	q := query.Query{Prefix: dsMetadata.String()}
-	res, err := s.ds.Query(q)
+	res, err := s.ds.Query(context.Background(), q)
 	if err != nil {
 		return miner.MetaIndex{}, fmt.Errorf("executing query: %s", err)
 	}
@@ -141,7 +141,8 @@ func (s *Store) getMetaIndex() (miner.MetaIndex, error) {
 
 func (s *Store) getOnChainIndex() (miner.ChainIndex, error) {
 	q := query.Query{Prefix: dsOnChainMiner.String()}
-	res, err := s.ds.Query(q)
+	ctx := context.Background()
+	res, err := s.ds.Query(ctx, q)
 	if err != nil {
 		return miner.ChainIndex{}, fmt.Errorf("executing query: %s", err)
 	}
@@ -165,7 +166,7 @@ func (s *Store) getOnChainIndex() (miner.ChainIndex, error) {
 		info[minerAddr] = m
 	}
 
-	buf, err := s.ds.Get(dsOnChainHeight)
+	buf, err := s.ds.Get(ctx, dsOnChainHeight)
 	if err != nil && err != datastore.ErrNotFound {
 		return miner.ChainIndex{}, fmt.Errorf("get onchain height: %s", err)
 	}

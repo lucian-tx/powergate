@@ -1,6 +1,7 @@
 package pinstore
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"sync"
@@ -237,7 +238,7 @@ func (s *Store) RemoveStaged(c cid.Cid) error {
 		}
 	}
 
-	if err := s.ds.Delete(makeKey(c)); err != nil {
+	if err := s.ds.Delete(context.Background(), makeKey(c)); err != nil {
 		return fmt.Errorf("deleting from datastore: %s", err)
 	}
 	delete(s.cache, c)
@@ -288,7 +289,7 @@ func (s *Store) persist(r PinnedCid) error {
 	k := makeKey(r.Cid)
 
 	if len(r.Pins) == 0 {
-		if err := s.ds.Delete(k); err != nil {
+		if err := s.ds.Delete(context.Background(), k); err != nil {
 			return fmt.Errorf("delete from datastore: %s", err)
 		}
 		delete(s.cache, r.Cid)
@@ -299,7 +300,7 @@ func (s *Store) persist(r PinnedCid) error {
 	if err != nil {
 		return fmt.Errorf("marshaling to datastore: %s", err)
 	}
-	if err := s.ds.Put(k, buf); err != nil {
+	if err := s.ds.Put(context.Background(), k, buf); err != nil {
 		return fmt.Errorf("put in datastore: %s", err)
 	}
 	s.cache[r.Cid] = r
@@ -309,7 +310,7 @@ func (s *Store) persist(r PinnedCid) error {
 
 func populateCache(ds datastore.TxnDatastore) (map[cid.Cid]PinnedCid, error) {
 	q := query.Query{Prefix: pinBaseKey.String()}
-	res, err := ds.Query(q)
+	res, err := ds.Query(context.Background(), q)
 	if err != nil {
 		return nil, fmt.Errorf("executing query: %s", err)
 	}

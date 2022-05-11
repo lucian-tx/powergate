@@ -7,8 +7,6 @@ import (
 	"time"
 
 	"github.com/filecoin-project/lotus/api"
-	"go.opentelemetry.io/otel/metric"
-	"go.opentelemetry.io/otel/metric/global"
 )
 
 const (
@@ -29,7 +27,6 @@ type SyncMonitor struct {
 // NewSyncMonitor creates a new LotusSyncMonitor.
 func NewSyncMonitor(cb ClientBuilder) (*SyncMonitor, error) {
 	lsm := &SyncMonitor{cb: cb}
-	lsm.initMetrics()
 
 	if err := lsm.refreshSyncDiff(); err != nil {
 		return nil, fmt.Errorf("getting initial sync height diff: %s", err)
@@ -132,22 +129,4 @@ func (lsm *SyncMonitor) refreshSyncDiff() error {
 	lsm.lock.Unlock()
 
 	return nil
-}
-
-func (lsm *SyncMonitor) initMetrics() {
-	meter := global.Meter("powergate")
-
-	_ = metric.Must(meter).NewInt64ValueObserver("powergate.lotus.height",
-		func(ctx context.Context, result metric.Int64ObserverResult) {
-			lsm.lock.Lock()
-			defer lsm.lock.Unlock()
-			result.Observe(lsm.height)
-		}, metric.WithDescription("Lotus node height"))
-
-	_ = metric.Must(meter).NewInt64ValueObserver("powergate.lotus.height.diff",
-		func(ctx context.Context, result metric.Int64ObserverResult) {
-			lsm.lock.Lock()
-			defer lsm.lock.Unlock()
-			result.Observe(lsm.heightDiff)
-		}, metric.WithDescription("Lotus node height syncing diff"))
 }

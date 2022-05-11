@@ -25,8 +25,6 @@ import (
 	httpapi "github.com/ipfs/go-ipfs-http-client"
 	logging "github.com/ipfs/go-log/v2"
 	ma "github.com/multiformats/go-multiaddr"
-	measure "github.com/textileio/go-ds-measure"
-	mongods "github.com/textileio/go-ds-mongo"
 	adminPb "github.com/textileio/powergate/v2/api/gen/powergate/admin/v1"
 	userPb "github.com/textileio/powergate/v2/api/gen/powergate/user/v1"
 	"github.com/textileio/powergate/v2/api/server/admin"
@@ -49,7 +47,6 @@ import (
 	minerIndex "github.com/textileio/powergate/v2/index/miner/lotusidx"
 	"github.com/textileio/powergate/v2/iplocation/maxmind"
 	"github.com/textileio/powergate/v2/lotus"
-	"github.com/textileio/powergate/v2/migration"
 	"github.com/textileio/powergate/v2/reputation"
 	txndstr "github.com/textileio/powergate/v2/txndstransform"
 	"github.com/textileio/powergate/v2/util"
@@ -70,15 +67,57 @@ var (
 		"/ffs.rpc.RPCService/SendFil",
 	}
 
-	// Migrations contains the list of supported migrations.
-	Migrations = map[int]migration.Migration{
-		1: migration.V1MultitenancyMigration,
-		2: migration.V2StorageInfoDealIDs,
-		3: migration.V3StorageJobsIndexMigration,
-		4: migration.V4RecordsMigration,
-		5: migration.V5DeleteOldMinerIndex,
-	}
+	//// Migrations contains the list of supported migrations.
+	//Migrations = map[int]migration.Migration{
+	//	1: migration.V1MultitenancyMigration,
+	//	2: migration.V2StorageInfoDealIDs,
+	//	3: migration.V3StorageJobsIndexMigration,
+	//	4: migration.V4RecordsMigration,
+	//	5: migration.V5DeleteOldMinerIndex,
+	//}
 )
+
+//var _ datastore.Datastore = (*MongoWrapper)(nil)
+//
+//type MongoWrapper struct {
+//	ds *mongods.MongoDS
+//}
+//
+//func (m MongoWrapper) NewTransaction(ctx context.Context, readOnly bool) (datastore.Txn, error) {
+//	return m.ds.NewTransaction(readOnly)
+//}
+//
+//func (m MongoWrapper) Get(ctx context.Context, key datastore.Key) (value []byte, err error) {
+//	return m.ds.Get(key)
+//}
+//
+//func (m MongoWrapper) Has(ctx context.Context, key datastore.Key) (exists bool, err error) {
+//	return m.ds.Has(key)
+//}
+//
+//func (m MongoWrapper) GetSize(ctx context.Context, key datastore.Key) (size int, err error) {
+//	return m.ds.GetSize(key)
+//}
+//
+//func (m MongoWrapper) Query(ctx context.Context, q query.Query) (query.Results, error) {
+//	return m.ds.Query(q)
+//}
+//
+//func (m MongoWrapper) Put(ctx context.Context, key datastore.Key, value []byte) error {
+//	return m.ds.Put(key, value)
+//}
+//
+//func (m MongoWrapper) Delete(ctx context.Context, key datastore.Key) error {
+//	return m.ds.Delete(key)
+//}
+//
+//func (m MongoWrapper) Sync(ctx context.Context, prefix datastore.Key) error {
+//	return m.ds.Sync(prefix)
+//}
+//
+//func (m MongoWrapper) Close() error {
+//	return m.ds.Close()
+//}
 
 // Server represents the configured lotus client and filecoin grpc server.
 type Server struct {
@@ -205,9 +244,9 @@ func NewServer(conf Config) (*Server, error) {
 		}
 	}
 
-	if err := runMigrations(conf); err != nil {
-		return nil, fmt.Errorf("running migrations: %s", err)
-	}
+	//if err := runMigrations(conf); err != nil {
+	//	return nil, fmt.Errorf("running migrations: %s", err)
+	//}
 
 	ds, err := createDatastore(conf, false)
 	if err != nil {
@@ -576,35 +615,40 @@ func createDatastore(conf Config, longTimeout bool) (datastore.TxnDatastore, err
 	var ds datastore.TxnDatastore
 	var err error
 
-	if conf.MongoURI != "" {
-		log.Info("Opening Mongo database...")
-		mongoCtx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-		defer cancel()
-		if conf.MongoDB == "" {
-			return nil, fmt.Errorf("mongo database name is empty")
-		}
-		var opts []mongods.Option
-		if longTimeout {
-			opts = []mongods.Option{mongods.WithOpTimeout(time.Hour), mongods.WithTxnTimeout(time.Hour)}
-		}
-		ds, err = mongods.New(mongoCtx, conf.MongoURI, conf.MongoDB, opts...)
-		if err != nil {
-			return nil, fmt.Errorf("opening mongo datastore: %s", err)
-		}
-	} else {
-		log.Info("Opening badger database...")
-		path := filepath.Join(conf.RepoPath, datastoreFolderName)
-		if err := os.MkdirAll(path, os.ModePerm); err != nil {
-			return nil, fmt.Errorf("creating repo folder: %s", err)
-		}
-		opts := &badger.DefaultOptions
-		ds, err = badger.NewDatastore(path, opts)
-		if err != nil {
-			return nil, fmt.Errorf("opening badger datastore: %s", err)
-		}
+	//if conf.MongoURI != "" {
+	//	log.Info("Opening Mongo database...")
+	//	mongoCtx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	//	defer cancel()
+	//	if conf.MongoDB == "" {
+	//		return nil, fmt.Errorf("mongo database name is empty")
+	//	}
+	//	var opts []mongods.Option
+	//	if longTimeout {
+	//		opts = []mongods.Option{mongods.WithOpTimeout(time.Hour), mongods.WithTxnTimeout(time.Hour)}
+	//	}
+	//
+	//	mongo, err := mongods.New(mongoCtx, conf.MongoURI, conf.MongoDB, opts...)
+	//	if err != nil {
+	//		return nil, fmt.Errorf("opening mongo datastore: %s", err)
+	//	}
+	//
+	//	mdsWrapper := MongoWrapper{mongo}
+	//	ds = mdsWrapper
+	//
+	//} else {
+	log.Info("Opening badger database...")
+	path := filepath.Join(conf.RepoPath, datastoreFolderName)
+	if err := os.MkdirAll(path, os.ModePerm); err != nil {
+		return nil, fmt.Errorf("creating repo folder: %s", err)
 	}
+	opts := &badger.DefaultOptions
+	ds, err = badger.NewDatastore(path, opts)
+	if err != nil {
+		return nil, fmt.Errorf("opening badger datastore: %s", err)
+	}
+	//}
 
-	return measure.New("powergate.datastore", ds), nil
+	return ds, nil
 }
 
 func getMinerSelector(conf Config, rm *reputation.Module, ai *ask.Runner, cb lotus.ClientBuilder) (ffs.MinerSelector, error) {
@@ -680,23 +724,23 @@ func nonCompliantAPIsInterceptor(nonCompliantAPIs []string) grpc.UnaryServerInte
 	}
 }
 
-func runMigrations(conf Config) error {
-	log.Infof("Ensuring migrations...")
-	ds, err := createDatastore(conf, true)
-	if err != nil {
-		return fmt.Errorf("creating migration datastore: %s", err)
-	}
-	defer func() {
-		if err := ds.Close(); err != nil {
-			log.Errorf("closing migration datastore: %s", err)
-		}
-	}()
-
-	m := migration.New(ds, Migrations)
-	if err := m.Ensure(); err != nil {
-		return fmt.Errorf("running migrations: %s", err)
-	}
-	log.Infof("Migrations ensured")
-
-	return nil
-}
+//func runMigrations(conf Config) error {
+//	log.Infof("Ensuring migrations...")
+//	ds, err := createDatastore(conf, true)
+//	if err != nil {
+//		return fmt.Errorf("creating migration datastore: %s", err)
+//	}
+//	defer func() {
+//		if err := ds.Close(); err != nil {
+//			log.Errorf("closing migration datastore: %s", err)
+//		}
+//	}()
+//
+//	m := migration.New(ds, Migrations)
+//	if err := m.Ensure(); err != nil {
+//		return fmt.Errorf("running migrations: %s", err)
+//	}
+//	log.Infof("Migrations ensured")
+//
+//	return nil
+//}

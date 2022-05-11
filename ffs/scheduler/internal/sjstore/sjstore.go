@@ -17,7 +17,6 @@ import (
 	"github.com/textileio/powergate/v2/deals"
 	"github.com/textileio/powergate/v2/ffs"
 	"github.com/textileio/powergate/v2/util"
-	"go.opentelemetry.io/otel/metric"
 )
 
 /**
@@ -61,9 +60,6 @@ type Store struct {
 
 	queuedIDs    map[ffs.JobID]struct{}
 	executingIDs map[ffs.JobID]struct{}
-
-	// Metrics
-	metricJobCounter metric.Int64UpDownCounter
 }
 
 // Stats return metrics about current job queues.
@@ -89,7 +85,6 @@ func New(ds datastore.TxnDatastore) (*Store, error) {
 		queuedIDs:          make(map[ffs.JobID]struct{}),
 		executingIDs:       make(map[ffs.JobID]struct{}),
 	}
-	s.initMetrics()
 	if err := s.loadCaches(); err != nil {
 		return nil, fmt.Errorf("reloading caches: %s", err)
 	}
@@ -148,15 +143,10 @@ func (s *Store) Finalize(jid ffs.JobID, st ffs.JobStatus, jobError error, dealEr
 		return err
 	}
 
-	ctx := context.Background()
-	s.metricJobCounter.Add(ctx, -1, attrStatusExecuting)
 	switch st {
 	case ffs.Success:
-		s.metricJobCounter.Add(ctx, 1, attrStatusSuccess)
 	case ffs.Failed:
-		s.metricJobCounter.Add(ctx, 1, attrStatusFailed)
 	case ffs.Canceled:
-		s.metricJobCounter.Add(ctx, 1, attrStatusCanceled)
 	default:
 		return fmt.Errorf("can't finalize job with status %s", ffs.JobStatusStr[st])
 	}
@@ -193,10 +183,6 @@ func (s *Store) Dequeue(iid ffs.APIID) (*ffs.StorageJob, error) {
 				return nil, err
 			}
 
-			ctx := context.Background()
-			s.metricJobCounter.Add(ctx, -1, attrStatusQueued)
-			s.metricJobCounter.Add(ctx, 1, attrStatusExecuting)
-
 			return &job, nil
 		}
 		if ok {
@@ -220,7 +206,6 @@ func (s *Store) Enqueue(j ffs.StorageJob) error {
 	if err := s.put(j, true); err != nil {
 		return fmt.Errorf("saving to datastore: %s", err)
 	}
-	s.metricJobCounter.Add(context.Background(), 1, attrStatusQueued)
 
 	return nil
 }
@@ -293,7 +278,7 @@ func (s *Store) CancelQueued(jid ffs.JobID) (bool, error) {
 
 func (s *Store) cancelQueued(c cid.Cid) error {
 	q := query.Query{Prefix: dsBaseJob.String()}
-	res, err := s.ds.Query(q)
+	res, err := s.ds.Query(context.Background(), q)
 	if err != nil {
 		return fmt.Errorf("querying datastore: %s", err)
 	}
@@ -378,7 +363,7 @@ func (s *Store) AddStartedDeals(iid ffs.APIID, c cid.Cid, proposals []cid.Cid) e
 	if err != nil {
 		return fmt.Errorf("marshaling started deals: %s", err)
 	}
-	if err := s.ds.Put(makeStartedDealsKey(iid, c), buf); err != nil {
+	if err := s.ds.Put(context.Background(), makeStartedDealsKey(iid, c), buf); err != nil {
 		return fmt.Errorf("saving started deals to datastore: %s", err)
 	}
 	return nil
@@ -388,7 +373,7 @@ func (s *Store) AddStartedDeals(iid ffs.APIID, c cid.Cid, proposals []cid.Cid) e
 func (s *Store) RemoveStartedDeals(iid ffs.APIID, c cid.Cid) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	if err := s.ds.Delete(makeStartedDealsKey(iid, c)); err != nil {
+	if err := s.ds.Delete(context.Background(), makeStartedDealsKey(iid, c)); err != nil {
 		return fmt.Errorf("deleting started deals from datastore: %s", err)
 	}
 	return nil
@@ -400,7 +385,7 @@ func (s *Store) GetStartedDeals(iid ffs.APIID, c cid.Cid) ([]cid.Cid, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	b, err := s.ds.Get(makeStartedDealsKey(iid, c))
+	b, err := s.ds.Get(context.Background(), makeStartedDealsKey(iid, c))
 	if err == datastore.ErrNotFound {
 		return nil, nil
 	}
@@ -501,7 +486,7 @@ func (s *Store) List(config ListConfig) ([]ffs.StorageJob, bool, string, error) 
 		Prefix: prefix,
 		Orders: []query.Order{query.OrderByFunction(byTime(config.Ascending))},
 	}
-	res, err := s.ds.Query(q)
+	res, err := s.ds.Query(context.Background(), q)
 	if err != nil {
 		return nil, false, "", fmt.Errorf("querying datastore: %v", err)
 	}
@@ -592,26 +577,26 @@ func (s *Store) put(j ffs.StorageJob, updateIndex bool) error {
 		return fmt.Errorf("marshaling for datastore: %s", err)
 	}
 
-	txn, err := s.ds.NewTransaction(false)
+	txn, err := s.ds.NewTransaction(context.Background(), false)
 	if err != nil {
 		return fmt.Errorf("starting transaction: %s", err)
 	}
-	defer txn.Discard()
+	defer txn.Discard(context.Background())
 
-	if err := s.ds.Put(makeKey(j.ID), buf); err != nil {
+	if err := s.ds.Put(context.Background(), makeKey(j.ID), buf); err != nil {
 		return fmt.Errorf("saving to datastore: %s", err)
 	}
 
 	if updateIndex {
-		if err := s.ds.Put(makeAPIIDKey(j), []byte(j.ID)); err != nil {
+		if err := s.ds.Put(context.Background(), makeAPIIDKey(j), []byte(j.ID)); err != nil {
 			return fmt.Errorf("saving to api id index: %s", err)
 		}
-		if err := s.ds.Put(makeCidKey(j), []byte(j.ID)); err != nil {
+		if err := s.ds.Put(context.Background(), makeCidKey(j), []byte(j.ID)); err != nil {
 			return fmt.Errorf("saving to cid index: %s", err)
 		}
 	}
 
-	if err := txn.Commit(); err != nil {
+	if err := txn.Commit(context.Background()); err != nil {
 		return fmt.Errorf("committing txn: %v", err)
 	}
 
@@ -678,7 +663,7 @@ func (s *Store) put(j ffs.StorageJob, updateIndex bool) error {
 }
 
 func (s *Store) get(jid ffs.JobID) (ffs.StorageJob, error) {
-	buf, err := s.ds.Get(makeKey(jid))
+	buf, err := s.ds.Get(context.Background(), makeKey(jid))
 	if err == datastore.ErrNotFound {
 		return ffs.StorageJob{}, ErrNotFound
 	}
@@ -711,7 +696,7 @@ func (s *Store) loadCaches() error {
 	defer s.lock.Unlock()
 
 	q := query.Query{Prefix: dsBaseJob.String()}
-	res, err := s.ds.Query(q)
+	res, err := s.ds.Query(context.Background(), q)
 	if err != nil {
 		return fmt.Errorf("querying datastore: %s", err)
 	}
@@ -762,11 +747,6 @@ func (s *Store) loadCaches() error {
 			})
 		}
 	}
-
-	stats := s.getStats()
-	ctx := context.Background()
-	s.metricJobCounter.Add(ctx, int64(stats.TotalQueued), attrStatusQueued)
-	s.metricJobCounter.Add(ctx, int64(stats.TotalExecuting), attrStatusExecuting)
 
 	return nil
 }

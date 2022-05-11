@@ -252,7 +252,7 @@ func (m *Manager) saveDefaultConfig(dc ffs.StorageConfig) error {
 	if err != nil {
 		return fmt.Errorf("marshaling default config: %s", err)
 	}
-	if err := m.ds.Put(dsDefaultStorageConfigKey, buf); err != nil {
+	if err := m.ds.Put(context.Background(), dsDefaultStorageConfigKey, buf); err != nil {
 		return fmt.Errorf("saving default config to datastore: %s", err)
 	}
 	m.defaultConfig = dc
@@ -260,7 +260,7 @@ func (m *Manager) saveDefaultConfig(dc ffs.StorageConfig) error {
 }
 
 func loadDefaultStorageConfig(ds datastore.Datastore, onLocalnet bool) (ffs.StorageConfig, error) {
-	d, err := ds.Get(dsDefaultStorageConfigKey)
+	d, err := ds.Get(context.Background(), dsDefaultStorageConfigKey)
 	if err == datastore.ErrNotFound {
 		if onLocalnet {
 			return localnetZeroConfig, nil

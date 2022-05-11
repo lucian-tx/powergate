@@ -1,6 +1,7 @@
 package cistore
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -38,7 +39,7 @@ func New(ds datastore.Datastore) *Store {
 // Get gets the current stored state of a Cid.
 func (s *Store) Get(iid ffs.APIID, c cid.Cid) (ffs.StorageInfo, error) {
 	var ci ffs.StorageInfo
-	buf, err := s.ds.Get(makeKey(iid, c))
+	buf, err := s.ds.Get(context.Background(), makeKey(iid, c))
 	if err == datastore.ErrNotFound {
 		return ci, ErrNotFound
 	}
@@ -64,7 +65,7 @@ func (s *Store) List(iids []ffs.APIID, cids []cid.Cid) ([]ffs.StorageInfo, error
 	}
 
 	q := query.Query{}
-	res, err := s.ds.Query(q)
+	res, err := s.ds.Query(context.Background(), q)
 	if err != nil {
 		return nil, fmt.Errorf("querying StorageInfos: %v", err)
 	}
@@ -124,7 +125,7 @@ func (s *Store) Put(ci ffs.StorageInfo) error {
 	if err != nil {
 		return fmt.Errorf("marshaling storage info for datastore: %s", err)
 	}
-	if err := s.ds.Put(makeKey(ci.APIID, ci.Cid), buf); err != nil {
+	if err := s.ds.Put(context.Background(), makeKey(ci.APIID, ci.Cid), buf); err != nil {
 		return fmt.Errorf("put storage info in datastore: %s", err)
 	}
 	return nil

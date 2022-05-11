@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"testing"
@@ -38,7 +39,7 @@ func TestIpfsAddBump(t *testing.T) {
 
 			var cfg ffs.StorageConfig
 			k := datastore.NewKey("/ffs/manager/api/274cb2c5-a0da-49fa-91a8-97b9d387d4fa/istore/cidstorageconfig/QmbtfAvVRVgEa9RH6vYpKg1HWbBQjxiZ6vNG1AAvt3vyfR")
-			buf, err := ds.Get(k)
+			buf, err := ds.Get(context.Background(), k)
 			require.NoError(t, err)
 			err = json.Unmarshal(buf, &cfg)
 			require.NoError(t, err)

@@ -73,7 +73,7 @@ func (s *Store) Dequeue() (*ffs.RetrievalJob, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	q := query.Query{Prefix: dsBaseJob.String()}
-	res, err := s.ds.Query(q)
+	res, err := s.ds.Query(context.Background(), q)
 	if err != nil {
 		return nil, fmt.Errorf("querying datastore: %s", err)
 	}
@@ -168,7 +168,7 @@ func (s *Store) put(j ffs.RetrievalJob) error {
 	if err != nil {
 		return fmt.Errorf("marshaling for datastore: %s", err)
 	}
-	if err := s.ds.Put(makeKey(j.ID), buf); err != nil {
+	if err := s.ds.Put(context.Background(), makeKey(j.ID), buf); err != nil {
 		return fmt.Errorf("saving to datastore: %s", err)
 	}
 	s.notifyWatchers(j)
@@ -176,7 +176,7 @@ func (s *Store) put(j ffs.RetrievalJob) error {
 }
 
 func (s *Store) get(jid ffs.JobID) (ffs.RetrievalJob, error) {
-	buf, err := s.ds.Get(makeKey(jid))
+	buf, err := s.ds.Get(context.Background(), makeKey(jid))
 	if err == datastore.ErrNotFound {
 		return ffs.RetrievalJob{}, ErrNotFound
 	}

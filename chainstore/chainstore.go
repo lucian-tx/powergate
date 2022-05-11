@@ -109,7 +109,7 @@ func (s *Store) LoadAndPrune(ctx context.Context, currHead types.TipSetKey, valu
 
 func (s *Store) load(tsk types.TipSetKey, v interface{}) error {
 	key := toKeyData(tsk)
-	buf, err := s.ds.Get(key)
+	buf, err := s.ds.Get(context.Background(), key)
 	if err != nil {
 		return fmt.Errorf("error getting key %s: %s", key, err)
 	}
@@ -142,23 +142,24 @@ func (s *Store) Save(ctx context.Context, ts types.TipSetKey, state interface{})
 }
 
 func (s *Store) save(ts types.TipSetKey, state interface{}) error {
-	txn, err := s.ds.NewTransaction(false)
+	ctx := context.Background()
+	txn, err := s.ds.NewTransaction(ctx, false)
 	if err != nil {
 		return nil
 	}
-	defer txn.Discard()
+	defer txn.Discard(ctx)
 	buf, err := json.Marshal(state)
 	if err != nil {
 		return err
 	}
 	c := checkpoint{id: s.lastID + 1, ts: ts}
-	if err := txn.Put(toKeyData(c.ts), buf); err != nil {
+	if err := txn.Put(ctx, toKeyData(c.ts), buf); err != nil {
 		return err
 	}
-	if err := txn.Put(toKeyID(c.id), c.ts.Bytes()); err != nil {
+	if err := txn.Put(ctx, toKeyID(c.id), c.ts.Bytes()); err != nil {
 		return err
 	}
-	if err := txn.Commit(); err != nil {
+	if err := txn.Commit(ctx); err != nil {
 		return err
 	}
 
@@ -177,19 +178,20 @@ func (s *Store) save(ts types.TipSetKey, state interface{}) error {
 }
 
 func (s *Store) delete(c checkpoint) error {
-	txn, err := s.ds.NewTransaction(false)
+	ctx := context.Background()
+	txn, err := s.ds.NewTransaction(ctx, false)
 	if err != nil {
 		return err
 	}
-	defer txn.Discard()
+	defer txn.Discard(ctx)
 
-	if err := txn.Delete(toKeyData(c.ts)); err != nil {
+	if err := txn.Delete(ctx, toKeyData(c.ts)); err != nil {
 		return err
 	}
-	if err := txn.Delete(toKeyID(c.id)); err != nil {
+	if err := txn.Delete(ctx, toKeyID(c.id)); err != nil {
 		return err
 	}
-	return txn.Commit()
+	return txn.Commit(ctx)
 }
 
 func toKeyData(ts types.TipSetKey) datastore.Key {
@@ -201,7 +203,7 @@ func toKeyID(id uint64) datastore.Key {
 }
 
 func (s *Store) loadCheckpoints() error {
-	res, err := s.ds.Query(query.Query{Prefix: dsNsID.String()})
+	res, err := s.ds.Query(context.Background(), query.Query{Prefix: dsNsID.String()})
 	if err != nil {
 		return err
 	}

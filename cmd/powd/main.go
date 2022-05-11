@@ -1,12 +1,10 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"math/big"
-	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -21,15 +19,9 @@ import (
 	ma "github.com/multiformats/go-multiaddr"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	metricsOpenTelemetry "github.com/textileio/go-metrics-opentelemetry"
 	"github.com/textileio/powergate/v2/api/server"
 	"github.com/textileio/powergate/v2/buildinfo"
 	"github.com/textileio/powergate/v2/util"
-	"go.opentelemetry.io/contrib/instrumentation/runtime"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/exporters/metric/prometheus"
-	"go.opentelemetry.io/otel/metric"
-	"go.opentelemetry.io/otel/metric/global"
 )
 
 var (
@@ -55,11 +47,6 @@ func main() {
 	}
 
 	log.Infof("starting powd:\n%s", buildinfo.Summary())
-
-	// Configuring Prometheus exporter.
-	if err := setupInstrumentation(); err != nil {
-		log.Fatalf("starting instrumentation: %s", err)
-	}
 
 	confProtected := conf
 	if confProtected.MongoURI != "" {
@@ -201,37 +188,6 @@ func configFromFlags() (server.Config, error) {
 
 		DisableNonCompliantAPIs: disableNonCompliantAPIs,
 	}, nil
-}
-
-func setupInstrumentation() error {
-	exporter, err := prometheus.InstallNewPipeline(prometheus.Config{
-		DefaultHistogramBoundaries: []float64{1e-4, 1e-3, 1e-2, 1e-1, 1},
-	})
-	if err != nil {
-		log.Panicf("failed to initialize prometheus exporter %v", err)
-	}
-	http.HandleFunc("/metrics", exporter.ServeHTTP)
-	go func() {
-		_ = http.ListenAndServe(":8888", nil)
-	}()
-
-	if err := metricsOpenTelemetry.Inject(); err != nil {
-		return fmt.Errorf("injecting datastore open-telemetry: %s", err)
-	}
-
-	if err := runtime.Start(runtime.WithMinimumReadMemStatsInterval(time.Second)); err != nil {
-		return fmt.Errorf("starting Go runtime metrics: %s", err)
-	}
-
-	meter := global.Meter("powergate")
-	attrBuildDate := attribute.Key("builddate").String(buildinfo.BuildDate)
-	attrGitSummary := attribute.Key("gitsummary").String(buildinfo.GitSummary)
-	attrGitBranch := attribute.Key("gitbranch").String(buildinfo.GitBranch)
-	attrGitCommit := attribute.Key("gitcommit").String(buildinfo.GitCommit)
-	metricInfo := metric.Must(meter).NewInt64Counter("powergate.info")
-	metricInfo.Add(context.Background(), 1, attrBuildDate, attrGitSummary, attrGitBranch, attrGitCommit)
-
-	return nil
 }
 
 func setupLogging(repoPath string) error {

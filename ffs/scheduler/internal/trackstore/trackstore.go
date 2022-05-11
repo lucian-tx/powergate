@@ -1,6 +1,7 @@
 package trackstore
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -139,7 +140,7 @@ func (s *Store) GetRenewables() ([]TrackedCid, error) {
 
 func (s *Store) query(renewable bool, repairable bool) ([]TrackedCid, error) {
 	q := query.Query{}
-	r, err := s.ds.Query(q)
+	r, err := s.ds.Query(context.Background(), q)
 	if err != nil {
 		return nil, fmt.Errorf("querying persisted tracked storage configs: %s", err)
 	}
@@ -179,7 +180,7 @@ func (s *Store) persist(c cid.Cid, scs []TrackedStorageConfig) error {
 	// If the list of storage configs resulted to be empty, then remove it from datastore.
 	key := datastore.NewKey(c.String())
 	if len(scs) == 0 {
-		if err := s.ds.Delete(key); err != nil {
+		if err := s.ds.Delete(context.Background(), key); err != nil {
 			return fmt.Errorf("deleting empty storage configs for cid: %s", err)
 		}
 		return nil
@@ -190,14 +191,14 @@ func (s *Store) persist(c cid.Cid, scs []TrackedStorageConfig) error {
 	if err != nil {
 		return fmt.Errorf("marshaling storage configs: %s", err)
 	}
-	if err := s.ds.Put(key, buf); err != nil {
+	if err := s.ds.Put(context.Background(), key, buf); err != nil {
 		return fmt.Errorf("saving storage config list in datastore: %s", err)
 	}
 	return nil
 }
 
 func (s *Store) get(c cid.Cid) ([]TrackedStorageConfig, error) {
-	v, err := s.ds.Get(datastore.NewKey(c.String()))
+	v, err := s.ds.Get(context.Background(), datastore.NewKey(c.String()))
 	if err == datastore.ErrNotFound {
 		return nil, nil
 	}
