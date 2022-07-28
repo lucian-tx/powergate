@@ -25,31 +25,31 @@ require (
 	github.com/gin-contrib/static v0.0.0-20191128031702-f81c604d8ac2
 	github.com/gin-gonic/gin v1.7.7
 	github.com/golang/protobuf v1.5.2
-	github.com/google/go-cmp v0.5.5
+	github.com/google/go-cmp v0.5.7
 	github.com/google/uuid v1.3.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/improbable-eng/grpc-web v0.15.0
-	github.com/ipfs/go-blockservice v0.1.5
+	github.com/ipfs/go-blockservice v0.4.0
 	github.com/ipfs/go-car v0.0.4
 	github.com/ipfs/go-cid v0.1.0
-	github.com/ipfs/go-datastore v0.4.5
+	github.com/ipfs/go-datastore v0.5.0
 	github.com/ipfs/go-ds-badger v0.2.7
 	github.com/ipfs/go-ds-badger2 v0.1.1-0.20200708190120-187fc06f714e
 	github.com/ipfs/go-graphsync v0.7.0 // indirect
 	github.com/ipfs/go-ipfs v0.8.0
-	github.com/ipfs/go-ipfs-blockstore v1.0.4
-	github.com/ipfs/go-ipfs-exchange-offline v0.0.1
+	github.com/ipfs/go-ipfs-blockstore v1.2.0
+	github.com/ipfs/go-ipfs-exchange-offline v0.3.0
 	github.com/ipfs/go-ipfs-files v0.0.8
 	github.com/ipfs/go-ipfs-http-client v0.1.0
 	github.com/ipfs/go-ipld-cbor v0.0.5
-	github.com/ipfs/go-ipld-format v0.2.0
+	github.com/ipfs/go-ipld-format v0.3.0
 	github.com/ipfs/go-log/v2 v2.3.0
 	github.com/ipfs/go-merkledag v0.3.2
 	github.com/ipfs/go-unixfs v0.2.6
 	github.com/ipfs/interface-go-ipfs-core v0.4.0
 	github.com/ipld/go-car v0.2.1-0.20210322190947-cffd36d39d90 // indirect
 	github.com/jessevdk/go-assets v0.0.0-20160921144138-4f4301a06e15
-	github.com/libp2p/go-libp2p v0.14.2
+	github.com/libp2p/go-libp2p v0.14.3
 	github.com/libp2p/go-libp2p-core v0.8.6
 	github.com/libp2p/go-libp2p-kad-dht v0.11.1
 	github.com/logrusorgru/aurora v0.0.0-20200102142835-e9ef32dff381
@@ -68,16 +68,16 @@ require (
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.7.1
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.7.1
 	github.com/textileio/dsutils v1.0.1
 	github.com/textileio/go-ds-measure v0.1.1-0.20210323185620-1df9394d5b7a
 	github.com/textileio/go-ds-mongo v0.1.4
 	github.com/textileio/go-metrics-opentelemetry v0.0.0-20210323190205-79a1865cff3a
 	go.opencensus.io v0.23.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.18.0
-	go.opentelemetry.io/otel v0.20.0
+	go.opentelemetry.io/otel v1.7.0
 	go.opentelemetry.io/otel/exporters/metric/prometheus v0.20.0
-	go.opentelemetry.io/otel/metric v0.20.0
+	go.opentelemetry.io/otel/metric v0.27.0
 	google.golang.org/grpc v1.36.1
 	google.golang.org/protobuf v1.26.0
 	nhooyr.io/websocket v1.8.6 // indirect
@@ -97,7 +97,7 @@ require (
 	github.com/VividCortex/ewma v1.1.1 // indirect
 	github.com/akavel/rsrc v0.8.0 // indirect
 	github.com/aws/aws-sdk-go v1.32.11 // indirect
-	github.com/benbjohnson/clock v1.0.3 // indirect
+	github.com/benbjohnson/clock v1.1.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bren2010/proquint v0.0.0-20160323162903-38337c27106d // indirect
 	github.com/btcsuite/btcd v0.21.0-beta // indirect
@@ -141,6 +141,8 @@ require (
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gbrlsnchs/jwt/v3 v3.0.0-beta.1 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
+	github.com/go-logr/logr v1.2.3 // indirect
+	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/go-playground/locales v0.13.0 // indirect
 	github.com/go-playground/universal-translator v0.17.0 // indirect
@@ -163,7 +165,7 @@ require (
 	github.com/huin/goupnp v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/ipfs/bbloom v0.0.4 // indirect
-	github.com/ipfs/go-bitswap v0.3.4 // indirect
+	github.com/ipfs/go-bitswap v0.8.0 // indirect
 	github.com/ipfs/go-block-format v0.0.3 // indirect
 	github.com/ipfs/go-cidutil v0.0.2 // indirect
 	github.com/ipfs/go-filestore v1.0.0 // indirect
@@ -171,20 +173,20 @@ require (
 	github.com/ipfs/go-ipfs-cmds v0.6.0 // indirect
 	github.com/ipfs/go-ipfs-config v0.12.0 // indirect
 	github.com/ipfs/go-ipfs-delay v0.0.1 // indirect
-	github.com/ipfs/go-ipfs-ds-help v1.0.0 // indirect
-	github.com/ipfs/go-ipfs-exchange-interface v0.0.1 // indirect
+	github.com/ipfs/go-ipfs-ds-help v1.1.0 // indirect
+	github.com/ipfs/go-ipfs-exchange-interface v0.2.0 // indirect
 	github.com/ipfs/go-ipfs-pinner v0.1.1 // indirect
 	github.com/ipfs/go-ipfs-posinfo v0.0.1 // indirect
 	github.com/ipfs/go-ipfs-pq v0.0.2 // indirect
 	github.com/ipfs/go-ipfs-provider v0.4.3 // indirect
-	github.com/ipfs/go-ipfs-routing v0.1.0 // indirect
+	github.com/ipfs/go-ipfs-routing v0.2.1 // indirect
 	github.com/ipfs/go-ipfs-util v0.0.2 // indirect
 	github.com/ipfs/go-ipns v0.0.2 // indirect
 	github.com/ipfs/go-log v1.0.5 // indirect
 	github.com/ipfs/go-metrics-interface v0.0.1 // indirect
 	github.com/ipfs/go-mfs v0.1.2 // indirect
 	github.com/ipfs/go-path v0.0.9 // indirect
-	github.com/ipfs/go-peertaskqueue v0.2.0 // indirect
+	github.com/ipfs/go-peertaskqueue v0.7.0 // indirect
 	github.com/ipfs/go-verifcid v0.0.1 // indirect
 	github.com/ipld/go-ipld-prime v0.7.0 // indirect
 	github.com/ipld/go-ipld-prime-proto v0.1.1 // indirect
@@ -315,10 +317,11 @@ require (
 	github.com/xdg/stringprep v0.0.0-20180714160509-73f8eece6fdc // indirect
 	go.mongodb.org/mongo-driver v1.4.0 // indirect
 	go.opentelemetry.io/contrib v0.18.0 // indirect
+	go.opentelemetry.io/otel/internal/metric v0.27.0 // indirect
 	go.opentelemetry.io/otel/sdk v0.20.0 // indirect
 	go.opentelemetry.io/otel/sdk/export/metric v0.20.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v0.20.0 // indirect
-	go.opentelemetry.io/otel/trace v0.20.0 // indirect
+	go.opentelemetry.io/otel/trace v1.7.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/dig v1.10.0 // indirect
 	go.uber.org/fx v1.13.1 // indirect
